@@ -1,0 +1,60 @@
+<!--
+Author: Manvir Kaur
+KUID: 3064194
+Date: 10/03/2022
+Assignment: EECS 368 Assignment03
+Last modified: 10/03/2022
+Purpose: Simple tabbed interface using JavaScript and HTML
+Inputs: none except passed in paramaters for functions
+Outputs: Browser window with 3 tabs and text 
+-->
+
+<!DOCTYPE html>
+<tab-panel> 
+      <div data-tabname="Rock">Rock ...</div>
+      <div data-tabname="Chalk">Rock Chalk ...</div> 
+      <div data-tabname="Jayhawk">Rock Chalk Jayhawk - Go KU!</div> 
+</tab-panel>
+<head>
+  <title>Kaur's Jayhawk Page</title>
+</head> 
+<script>  // start of JavaScript code
+  function asTabs(node) {  // builds array containing the node's child elements
+    var tabs = []  // initializing the variable tabs to be an array
+    // check the number of tabs, and push them into the array tabs
+    for (var i = 0; i < node.childNodes.length; i++) {  // for statement to check child nodes of a node
+      var child = node.childNodes[i];  // setting the variable child equal to the child nodes elemen
+      if (child.nodeType == document.ELEMENT_NODE)  // if statement to check the nodetype's equivalence to the element node which is the <div>
+        tabs.push(child);  // the child variable containing the child node is pushed into the tabs array
+    } 
+    // set tabs buttons
+    var tabList = document.createElement("div");  // tablist variable created and set equal to a new div HTML element that is created
+    tabList.setAttribute("id", "tabList");  // sets the values of the attributes id and tablist on the tablist element
+    tabs.forEach(function(tab, i) {  // method executes the provided function once for each tabs array element
+      var button = document.createElement("button");  // button variable created and set equal to a new HTML element, button, that is created
+      button.textContent = tab.getAttribute("data-tabname");  // button's text content is set equal to each tab's tabname
+      button.addEventListener("click", function() { selectTab(i); });  // whenever button is clicked that tab is switched to
+      tabList.appendChild(button);  // button appends to the end of the list of children of tablist
+    });
+    node.insertBefore(tabList, node.firstChild);  // inserts a node before the node as a child of tablist
+    
+    // select tab, by set styles accordingly
+    function selectTab(n) {  // new function created for selecting the tab
+      tabs.forEach(function(tab, i) { // method executes a provided function once for each array element
+        if (i == n)  // if statement checking if i is equivalent to the n parameter taken in by the function
+          tab.style.display = ""; 
+        else
+          tab.style.display = "none";
+      });
+      for (var i = 0; i < tabList.childNodes.length; i++) {  // for statement running while element is less than the length of childnodes
+        tabList.childNodes[i].style.marginRight = "2px";  // this sets the right margin of the margin of the element
+        if (i == n)  // if statement checking if i is equivalent to the n parameter taken in by the function
+          tabList.childNodes[i].style.background = "red";  // sets the tab color to red if it is equal to n 
+        else
+          tabList.childNodes[i].style.background = "blue";  // else the color remains blue 
+      }
+    }
+    selectTab(0);  // Sets the initial tab to the first tab
+  }
+  asTabs(document.querySelector("tab-panel")); // this method returns the first element that matches the the tab panel.
+</script> 

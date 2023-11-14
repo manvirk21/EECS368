@@ -1,0 +1,119 @@
+-- Importing the Data.Sequence module and giving it the alias Seq
+import qualified Data.Sequence as Seq
+-- Importing the Data.Foldable module and giving it the alias Foldable
+import qualified Data.Foldable as Foldable
+-- Importing the Data.List module and giving it the alias List
+import qualified Data.List as List
+-- Importing the Data.Maybe module, which is used to handle the Maybe type.
+import Data.Maybe
+
+{-- Defining a new type called Contestant, which can be either One or Two.
+The deriving (Show, Eq) part is used to make the type an instance of the Show and
+Eq typeclasses, which are used to print the type and compare it, respectively. --}
+data Contestant = One | Two deriving (Show, Eq) -- Contestant type is used to take control of the turns and who wins
+
+-- Change player returns the player that is NOT the one passed as argument
+-- Basically a function that takes one Contestant and returns the other Contestant.
+change :: Contestant -> Contestant
+change One = Two
+change Two = One
+
+-- GameBoard is an alias for a Sequence of Ints, as they allow us to update single elements in easily.
+-- Defining a new type called GameBoard, which is an alias for a Sequence of Ints.
+type GameBoard = Seq.Seq Int
+
+-- Defining the initial board structure.
+firstBoard :: GameBoard
+firstBoard = Seq.fromList [5, 4, 3, 2, 1]
+
+-- The move method checks if a movement can be executed and returns the updated board if it is possible
+{-A function that takes a GameBoard and a tuple of Ints and returns a Maybe GameBoard.
+It checks if the row and stars are valid and returns the updated board if they are.-}
+move :: GameBoard -> (Int, Int) -> Maybe GameBoard
+-- Calling the move function with the board and a tuple of row and stars.
+move board (row, stars)
+    --Checking if the row and stars are valid and returns the updated board if they are.
+  | and [(Seq.index board row) >= stars,
+        -- Using the adjust function from the Data.Sequence module to update the board equaling row < 5
+          row < 5] = Just (Seq.adjust (\x -> x - stars) row board)
+    -- If the above isn't true the nothing happens to the board.
+  | otherwise = Nothing
+
+-- The display methods transforms a GameBoard into a nice, enumerated String of asterisks
+{-- A function that takes a GameBoard and returns a String.
+It uses the intercalate function from the Data.List module to join the numbers and stars lists 
+with a newline character.
+The numbers list is a list of strings that are used to enumerate the rows.
+The stars list is a list of strings that are used to display the stars in each row.
+The stars list is created using a list comprehension that takes the number of stars in each row 
+and concatenates them with a space.--}
+display :: GameBoard -> String -- Takes a GameBoard and returns a String.
+{-- Using the intercalate function from the Data.List module to join the 
+numbers and stars lists with a newline character. --}
+display board = List.intercalate "\n" (zipWith (++) numbers (stars board))
+                -- Creating a list of strings that are used to enumerate the rows.
+                where numbers = ["1. ", "2. ", "3. ", "4. ", "5. "]
+                        -- Creating a list of strings that are used to display the stars in each row.
+                      stars board = [(concat . take n) (repeat "* ")
+                                -- The next methods are the ones that control IO
+                                | n <- Foldable.toList board]
+
+-- Defining the main function as an IO function and calling the nim function.
+main :: IO () -- Defining the main function as an IO function.
+main = nim -- calling the nim funtion
+
+-- The main function that welcomes the player, displays the initial board and calls the first turn.
+-- Defining the nim function as an IO function.
+nim :: IO ()
+-- Calling the putStrLn function with the string "Welcome to nim!" as argument.
+nim = do putStrLn "Welcome to nim!"
+         -- Calling the putStrLn function with the display function as argument.
+         putStrLn (display firstBoard)
+         -- Calling the turn function with the firstBoard and the player One as arguments.
+         turn firstBoard One
+
+{-- The turn method displays the player and asks for a movement, then checks if there was a problem 
+    performing that movement and continues the game. This is the main game loop --}
+{- A function that takes a GameBoard and a Contestant and returns an IO function.
+It prints a message to the player, asks for a row and stars, and then calls the move function with the board and the row and stars as arguments.
+If the move function returns a Nothing value, it prints a message and calls the turn function with the board and the player as arguments.
+If the move function returns a Just value, it calls the isOver function with the value and the player that is NOT the one passed as argument. -}
+turn :: GameBoard -> Contestant -> IO ()
+-- Printing a message to the player.
+turn board player = do putStrLn ("\nIt's your turn, Player " ++ (show player) ++ "!")
+                       -- Printing a message to the player asking for a row to remove stars.
+                       putStrLn "Choose a row to remove stars!"
+                       -- Asking the user for a row and storing it in the row variable.
+                       row <- getLine
+                       -- Printing a message to the user asking for the number of stars to remove.
+                       putStrLn "How many stars do you want to remove?"
+                       -- Asking the user for a number of stars to remove and storing it in the stars variable.
+                       stars <- getLine
+                       -- Calling the move function with the board and the row and stars as arguments.
+                       let newBoard = move board ((read row) - 1, read stars)
+                       -- Checking if the move function returned a Nothing value.
+                       if newBoard == Nothing
+                         -- Printing a message to the user if the move function returns a Nothing value.
+                         then do putStrLn "Not valid movement"
+                                 -- Calling the turn function with the board and the player as arguments.
+                                 turn board player
+                         {-- Calling the isOver function with the value returned by the move function 
+                         and the player that is not the one passed as argument.-}
+                         else isOver (fromJust newBoard) (change player)
+
+-- isOver checks if the GameBoard is empty, and checks whether the game is over or the next turn must be called
+{- The isOver function takes a GameBoard and a Contestant and returns an IO function.
+It checks if the board is empty and prints a message to the player if it is.
+If the board is not empty, it prints the board and calls the turn function with the board and the player as arguments. -}
+isOver :: GameBoard -> Contestant -> IO()
+-- Checking if the board is empty and printing a message to the player if it is.
+isOver board player = do if board == Seq.fromList [0, 0, 0, 0, 0]
+                           -- Printing a message to the player if the board is empty.
+                           then putStrLn ("Congratulations, Player " ++ (show player)
+                                         ++ ", you win!")
+                           -- Printing a newline character if board is not empty.
+                           else do putStrLn ""
+                                   -- Printing the board to the screen.
+                                   putStrLn (display board)
+                                   --Calling the turn function with the board and the player as arguments.
+                                   turn board player

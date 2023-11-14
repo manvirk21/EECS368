@@ -1,0 +1,66 @@
+<!--
+Author: Manvir Kaur
+KUID: 3064194
+Date: 10/17/2022
+Assignment: EECS 368 Assignment04
+Last modified: 10/17/2022
+Purpose: Creating labeled pie charts
+-->
+
+
+<canvas width="1200" height="1000"></canvas>
+<script>
+  function createPieChart(centerX, centerY, radius, results) {  // function to create pie chart with 4 parameters 
+    let cx = document.querySelector("canvas").getContext("2d");  // creating a 2d context on canvas
+    let total = results.reduce((sum, {count}) => sum + count, 0);
+    // Start at the top
+    let currentAngle = -0.5 * Math.PI;  // calculates the current angle 
+    cx.font = "16px Helvetica"; // assigns the font
+    cx.fillStyle = "black"; // makes the font black
+    for (let result of results) {  // for loop iterates through all results in results list
+      let sliceAngle = (result.count / total) * 2 * Math.PI;  // calculates the slice angle
+      let textAngle = currentAngle + sliceAngle /2;  // calculates the text angle
+      cx.beginPath();  // beginning of the path
+      // from current angle, clockwise by slice's angle creates cx arc with the center, radius, current angle, and destination angle
+      cx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+      currentAngle += sliceAngle;  // increment current angle by the slice angle
+      cx.lineTo(centerX, centerY);  // draws line to the center 
+      cx.fillStyle = result.color;  // fills the arc with the color from the results data
+      cx.fill();  // fills color
+
+    cx.textBaseline = "middle";  // textbaseline is set to the center
+    // if textangle is greater than 0 then the text align starts
+    if (Math.cos(textAngle) > 0) {cx.textAlign = "start";}
+    else {cx.textAlign = "end";}  // else the text align ends
+
+    cx.fillText(
+      result.name,  // the text is filled the name of the result
+      centerX + Math.cos(textAngle) * radius * 1.2,  // centers the text horizontally 
+      centerY + Math.sin(textAngle) * radius * 1.2  // centers the text vertically
+      );
+
+    }
+  }
+
+  // Setting up an array of objects with each having a name, count, and color.
+  const results1 = [
+    {name: "Satisfied", count: 927, color: "#E8DAEF"},
+    {name: "Neutral", count: 463, color: "#A3E4D7"},
+    {name: "Unsatisfied", count: 213, color: "lightpink"},
+    {name: "No comment", count: 510, color: "darksalmon"}
+];
+
+  // Setting up a second array of objects with each having a name, count, and color.
+  const results2 = [
+    {name: "Very Happy", count: 104, color: "#FAD7A0" },
+    {name: "Happy", count: 63, color: "#ABEBC6" },
+    {name: "Neutral", count: 87, color: "#AED6F1" },
+    {name: "Unhappy", count: 51, color: "#D7BDE2" },
+    {name: "Very Unhappy", count: 26, color: "#D98880" },
+    {name: "No comment", count: 18, color: "#CACFD2" },
+];
+
+  // Calling the createPieChart function for each array specifying the values
+  createPieChart(300, 300, 100, results1);
+  createPieChart(800, 300, 100, results2); 
+</script>
